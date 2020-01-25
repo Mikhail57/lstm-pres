@@ -1,50 +1,229 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+    <title>LSTM</title>
 
-		<link rel="stylesheet" href="css/reset.css">
-		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/black.css">
 
-		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/monokai.css">
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/monokai.css">
 
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
-		</div>
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
 
-		<script src="js/reveal.js"></script>
+    <style>
+        table tr td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
 
-		<script>
-			// More info about config & dependencies:
-			// - https://github.com/hakimel/reveal.js#configuration
-			// - https://github.com/hakimel/reveal.js#dependencies
-			Reveal.initialize({
-				hash: true,
-				dependencies: [
-					{ src: 'plugin/markdown/marked.js' },
-					{ src: 'plugin/markdown/markdown.js' },
-					{ src: 'plugin/highlight/highlight.js' },
-					{ src: 'plugin/notes/notes.js', async: true }
-				]
-			});
-		</script>
-	</body>
+        section {
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <h1>LSTM</h1>
+            <blockquote>PyTorch'им немножко</blockquote>
+        </section>
+        <section>
+            <h2>Установим PyTorch</h2>
+            <p>Идем на официальный сайт и устанавливаем по инструкции (:</p>
+            <p><a href="https://pytorch.org/get-started/locally/">https://pytorch.org/get-started/locally/</a></p>
+        </section>
+        <section>
+            <section>
+                <h2>RNN</h2>
+                <p><b>Recurrent neural network (РНС — Рекуррентные нейронные сети)</b> — разновидность нейронных сетей,
+                    в которых существует «эффект памяти»</p>
+            </section>
+
+            <section style="font-size: .7em">
+                <h2>RNN применяются в разных сферах</h2>
+                <ul>
+                    <li>
+                        Обработка текстов
+                        <ul>
+                            <li>Определение стиля</li>
+                            <li>Дополнение текста</li>
+                            <li>Классификация</li>
+                            <li>Перевод</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Обработка аудио
+                        <ul>
+                            <li>Распознавание речи</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Обработка видео
+                        <ul>
+                            <li>Прогнозирование следующего кадра</li>
+                            <li>Распознавание эмоций</li>
+                        </ul>
+                    </li>
+                    <li>
+                        Обработка изображений
+                        <ul>
+                            <li>Прогнозирование следующих пикселей на основе окружения</li>
+                            <li>Генерация описания изображения</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>RNN</h2>
+                <img src="https://miro.medium.com/max/412/1*FKOv5k_7x0kW5lXbltMiCQ.png" alt="RNN имеют циклы">
+                <img src="https://miro.medium.com/max/627/1*xLcQd_xeBWHeC6CeYSJ9bA.png"
+                     alt="Можно развернуть этот цикл">
+            </section>
+
+            <section style="font-size: .5em">
+                <h2>Виды RNN</h2>
+                <table>
+                    <tr>
+                        <td>Один к одному</td>
+                        <td>Один ко многим</td>
+                        <td>Многие к одному</td>
+                        <td>Многие ко многим</td>
+                    </tr>
+                    <tr>
+                        <td><img src="https://neerc.ifmo.ru/wiki/images/a/af/RNN_OTO.jpg"/></td>
+                        <td><img src="https://neerc.ifmo.ru/wiki/images/d/d1/RNN_OTM.jpg"/></td>
+                        <td><img src="https://neerc.ifmo.ru/wiki/images/b/be/RNN_MTO.jpg"/></td>
+                        <td><img src="https://neerc.ifmo.ru/wiki/images/2/2a/RNN_MTM1.jpg"/></td>
+                    </tr>
+                    <tr>
+                        <td>Архитектура по сути является обычной нейронной сетью</td>
+                        <td>Может использоваться для генерации аудизаписей — подаем жанр, получаем аудио</td>
+                        <td>Может использоваться для анализация тональности отзыва</td>
+                        <td>Может использоваться для перевода с одного языка на другой</td>
+                    </tr>
+                </table>
+            </section>
+
+
+            <section>
+                <h2>Пример реализации на Python</h2>
+                <pre><code data-trim data-noescape>
+class RNN:
+    # ...
+    def step(self, x):
+        # update the hidden state
+        self.h = np.tanh(np.dot(self.W_hh, self.h) + np.dot(self.W_xh, x))
+        # compute the output vector
+        y = np.dot(self.W_hy, self.h)
+
+        return y
+</code></pre>
+                <math>$$ h_t = tanh(W_{hh}h_{t-1} + W_{xh}x_t) $$</math>
+                <math>$$ tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}} $$</math>
+            </section>
+
+            <section>
+                <h2>RNN имеют преимущества</h2>
+                <ul>
+                    <li>Размер входных и выходных данных может варьироваться</li>
+                    <li>Имеют «память»</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>RNN имеют недостатки</h2>
+                <ul>
+                    <li>Не имеют долговременной памяти</li>
+                    <li>Запоминают все</li>
+                </ul>
+            </section>
+        </section>
+
+        <section>
+            <section>
+                <h2>LSTM</h2>
+                <p><b>Сети долго-краткосрочной памяти (Long short-term memory)</b>&nbsp;— самая популярная разновидность
+                    RNN,
+                    способная запоминать данные на долгое время</p>
+
+            </section>
+            <section>
+                <h2>Схема слоев</h2>
+                <img src="https://colah.github.io/posts/2015-08-Understanding-LSTMs/img/LSTM3-chain.png"
+                     alt="Схема слоев">
+                <img src="https://colah.github.io/posts/2015-08-Understanding-LSTMs/img/LSTM2-notation.png"
+                     alt="Обозначения">
+            </section>
+            <section>
+                <h2>Пройдемся по шагам</h2>
+                <p>
+                    1. Выбираем, что забыть, а что оставить
+                    <img style="background: white"
+                         src="https://colah.github.io/posts/2015-08-Understanding-LSTMs/img/LSTM3-focus-f.png"
+                         alt="Выбираем, что забыть">
+                </p>
+                <p>
+                    2. Выбираем, что будем сохранять в ячейку (выбираем, какие значения будем обновлять и создаем эти
+                    значения)
+                    <img style="background: white"
+                         src="https://colah.github.io/posts/2015-08-Understanding-LSTMs/img/LSTM3-focus-i.png"
+                         alt="Обновление состояния">
+                </p>
+            </section>
+            <section>
+                <p>
+                    3. Обновляем состояние ячейки
+                    <img style="background: white"
+                         src="https://colah.github.io/posts/2015-08-Understanding-LSTMs/img/LSTM3-focus-C.png"
+                         alt="Выбираем, что забыть">
+                </p>
+                <p>
+                    4. Выбираем, что пойдет в ответ
+                    <img style="background: white"
+                         src="https://colah.github.io/posts/2015-08-Understanding-LSTMs/img/LSTM3-focus-o.png"
+                         alt="Обновление состояния">
+                </p>
+            </section>
+        </section>
+    </div>
+</div>
+
+<script src="js/reveal.js"></script>
+
+<script>
+    // More info about config & dependencies:
+    // - https://github.com/hakimel/reveal.js#configuration
+    // - https://github.com/hakimel/reveal.js#dependencies
+    Reveal.initialize({
+        hash: true,
+        dependencies: [
+            {src: 'plugin/markdown/marked.js'},
+            {src: 'plugin/markdown/markdown.js'},
+            {src: 'plugin/highlight/highlight.js'},
+            {src: 'plugin/notes/notes.js', async: true},
+            {src: 'plugin/math/math.js', async: true}
+        ],
+        math: {
+            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js',
+            config: 'TeX-AMS_HTML-full', // See http://docs.mathjax.org/en/latest/config-files.html
+            // pass other options into `MathJax.Hub.Config()`
+            TeX: {Macros: {RR: "{\\bf R}"}}
+        },
+    });
+</script>
+</body>
 </html>
